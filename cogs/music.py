@@ -91,6 +91,7 @@ class MusicCog(commands.Cog):
             print(f"Voice connection error: {e}")
 
     @commands.command(name="skip")
+    @commands.has_permissions(kick_members=True)
     async def skip(self, ctx):
         if ctx.guild.id != self.guild_id: return
         vc = ctx.guild.voice_client
@@ -101,6 +102,7 @@ class MusicCog(commands.Cog):
             await ctx.send("Nothing is playing right now.")
 
     @commands.command(name="refresh")
+    @commands.has_permissions(kick_members=True)
     async def refresh(self, ctx):
         if ctx.guild.id != self.guild_id: return
         await ctx.send("🔄 Checking Pixeldrain for new files... (This runs in the background)")
