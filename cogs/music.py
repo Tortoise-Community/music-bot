@@ -105,7 +105,7 @@ class MusicCog(commands.Cog):
     @commands.has_permissions(kick_members=True)
     async def refresh(self, ctx):
         if ctx.guild.id != self.guild_id: return
-        await ctx.send("🔄 Checking Pixeldrain for new files... (This runs in the background)")
+        await ctx.send("🔄 Checking Pixeldrain for new files...")
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self.fetch_files_blocking)
