@@ -10,5 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir /app/music
 
 COPY bot.py pixeldrain_sync.py keep_alive.py ./
+COPY cogs/ /app/cogs
 
 CMD ["python", "bot.py"]
