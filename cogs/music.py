@@ -2,7 +2,9 @@ import os
 import asyncio
 import discord
 from discord.ext import commands
-import pixeldrain_sync
+from discord import app_commands
+from utils import pixeldrain_manager
+from decouple import config
 
 
 class MusicCog(commands.Cog):
@@ -11,22 +13,21 @@ class MusicCog(commands.Cog):
         self.playlist = []
         self.current_index = 0
 
-        self.guild_id = int(os.getenv("GUILD_ID"))
-        self.channel_id = int(os.getenv("CHANNEL_ID"))
-        self.api_key = os.getenv("PIXELDRAIN_API_KEY")
-        self.album_id = os.getenv("PIXELDRAIN_ALBUM_ID")
+        self.guild_id = int(config("GUILD_ID"))
+        self.channel_id = int(config("CHANNEL_ID"))
+        self.api_key = config("PIXELDRAIN_API_KEY")
+        self.album_id = config("PIXELDRAIN_ALBUM_ID")
 
     async def cog_load(self):
         self.bot.loop.create_task(self.startup_task())
 
     def fetch_files_blocking(self):
         print("Checking local files and synchronizing with Pixeldrain...")
-        self.playlist = pixeldrain_sync.sync_music(self.api_key, self.album_id)
+        self.playlist = pixeldrain_manager.sync_music(self.api_key, self.album_id)
         if self.current_index >= len(self.playlist):
             self.current_index = 0
 
     def play_next(self, error=None):
-        """Callback function to loop through local files continuously."""
         if error:
             print(f"Player error: {error}")
 
@@ -37,7 +38,7 @@ class MusicCog(commands.Cog):
         vc = guild.voice_client
 
         if not self.playlist:
-            print("Playlist is empty. Add files and use !refresh.")
+            print("Playlist is empty. Add files and use /refresh.")
             return
 
         if self.current_index >= len(self.playlist):
@@ -47,7 +48,6 @@ class MusicCog(commands.Cog):
         self.current_index += 1
 
         try:
-            # Safeguard: Check if the file is completely empty before playing
             if os.path.getsize(song["path"]) == 0:
                 raise ValueError("File is 0 bytes (corrupted download).")
 
@@ -56,14 +56,10 @@ class MusicCog(commands.Cog):
             print(f"▶️ Playing local file: {song['name']}")
 
         except Exception as e:
-            # Using repr(e) forces Python to print the exact error object, preventing blank logs
             print(f"⚠️ Playback error for {song['name']}: {repr(e)}")
-
-            # Safeguard: Wait 2 seconds before trying the next song to prevent infinite loops
             self.bot.loop.call_later(2.0, self.play_next)
 
     async def startup_task(self):
-        """Dedicated background task to handle sync and connection safely."""
         await self.bot.wait_until_ready()
 
         loop = asyncio.get_running_loop()
@@ -90,41 +86,52 @@ class MusicCog(commands.Cog):
         except Exception as e:
             print(f"Voice connection error: {e}")
 
-    @commands.command(name="skip")
-    @commands.has_permissions(kick_members=True)
-    async def skip(self, ctx):
-        if ctx.guild.id != self.guild_id: return
-        vc = ctx.guild.voice_client
+    @app_commands.command(name="skip", description="Skips the currently playing track.")
+    @app_commands.default_permissions(kick_members=True)
+    async def skip(self, interaction: discord.Interaction):
+        if interaction.guild_id != self.guild_id:
+            await interaction.response.send_message("This command is restricted to the main server.", ephemeral=True)
+            return
+
+        vc = interaction.guild.voice_client
         if vc and vc.is_playing():
             vc.stop()
-            await ctx.send("⏩ Track skipped.")
+            await interaction.response.send_message("⏩ Track skipped.")
         else:
-            await ctx.send("Nothing is playing right now.")
+            await interaction.response.send_message("Nothing is playing right now.", ephemeral=True)
 
-    @commands.command(name="refresh")
-    @commands.has_permissions(kick_members=True)
-    async def refresh(self, ctx):
-        if ctx.guild.id != self.guild_id: return
-        await ctx.send("🔄 Checking Pixeldrain for new files...")
+    @app_commands.command(name="refresh", description="Forces a sync with Pixeldrain to pick up new files.")
+    @app_commands.default_permissions(kick_members=True)
+    async def refresh(self, interaction: discord.Interaction):
+        if interaction.guild_id != self.guild_id:
+            await interaction.response.send_message("This command is restricted to the main server.", ephemeral=True)
+            return
+
+        # Defer the interaction immediately so Discord doesn't timeout the 3-second limit
+        await interaction.response.defer(thinking=True)
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self.fetch_files_blocking)
 
-        await ctx.send(f"✅ Sync complete! Total tracks in local rotation: **{len(self.playlist)}**")
+        # Use followup.send() because we already deferred the initial response
+        await interaction.followup.send(f"✅ Sync complete! Total tracks in local rotation: **{len(self.playlist)}**")
 
-        vc = ctx.guild.voice_client
+        vc = interaction.guild.voice_client
         if vc and not vc.is_playing() and self.playlist:
             self.play_next()
 
-    @commands.command(name="status")
-    async def status(self, ctx):
-        if ctx.guild.id != self.guild_id: return
-        vc = ctx.guild.voice_client
+    @app_commands.command(name="status", description="Displays the currently streaming song.")
+    async def status(self, interaction: discord.Interaction):
+        if interaction.guild_id != self.guild_id:
+            await interaction.response.send_message("This command is restricted to the main server.", ephemeral=True)
+            return
+
+        vc = interaction.guild.voice_client
         if self.playlist and vc and vc.is_playing():
             current_song = self.playlist[(self.current_index - 1) % len(self.playlist)]
-            await ctx.send(f"🎶 **Now Playing:** `{current_song['name']}`")
+            await interaction.response.send_message(f"🎶 **Now Playing:** `{current_song['name']}`")
         else:
-            await ctx.send("The bot is idle.")
+            await interaction.response.send_message("The player is currently idle.", ephemeral=True)
 
 
 async def setup(bot):

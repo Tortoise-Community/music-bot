@@ -1,17 +1,13 @@
-import os
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-import keep_alive
+from decouple import config
 
-
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
+TOKEN = config("DISCORD_TOKEN")
 
 class MusicBot(commands.Bot):
     def __init__(self):
-        intents = discord.Intents.default()
-        intents.message_content = True
+        intents = discord.Intents.none()
+        intents.guilds = True
 
         status_activity = discord.CustomActivity(
             name="Playing lofi music",
@@ -19,20 +15,24 @@ class MusicBot(commands.Bot):
         )
 
         super().__init__(
-            command_prefix="!",
+            command_prefix=None,
             intents=intents,
-            activity=status_activity
+            activity=status_activity,
+            status=discord.Status.dnd,
+            max_messages=0,
+            member_cache_flags=discord.MemberCacheFlags.none(),
+            chunk_guilds_at_startup=False,
+            help_command=None
         )
 
     async def setup_hook(self):
         try:
             await self.load_extension("cogs.music")
-            print("Loaded extension: cogs.music")
+            await self.load_extension("cogs.health")
         except Exception as e:
-            print(f"Failed to load extension 'cogs.music': {e}")
+            print(f"Failed to load extension: {e}")
 
     async def on_ready(self):
-        await keep_alive.run_dummy_server()
         print(f"Logged in successfully as {self.user.name}")
 
 bot = MusicBot()

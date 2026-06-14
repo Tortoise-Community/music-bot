@@ -1,15 +1,21 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir poetry
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN poetry config virtualenvs.create false
 
-RUN mkdir /app/music
+COPY pyproject.toml poetry.lock* ./
 
-COPY bot.py pixeldrain_sync.py keep_alive.py ./
-COPY cogs/ /app/cogs
+RUN poetry install --no-interaction --no-root --no-ansi
+
+COPY . .
+
+RUN mkdir -p /app/music
 
 CMD ["python", "bot.py"]
