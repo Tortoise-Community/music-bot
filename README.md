@@ -1,4 +1,4 @@
-# Chilltoise: 24/7 Discord Music Bot
+# Music-Bot: 24/7 Discord Music Bot
 
 A lightweight discord music bot designed to play 24/7 lo-fi music in your server's voice channel. 
 Built with `discord.py` this bot caches MP3 files locally and synchronizes seamlessly with Pixeldrain in the background.
@@ -19,7 +19,7 @@ It is specifically optimized to run on the **Render Free Tier** with a built-in 
 ---
 
 ## Deploying to Render (Free Tier)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Tortoise-Community/chilltoise-bot)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Tortoise-Community/music-bot)
 
 > **Note:** To keep the bot running 24/7 on the free tier, use a service like [UptimeRobot](https://uptimerobot.com/) to ping your Render web service URL every 10 minutes.
 
@@ -30,7 +30,7 @@ If you are running this locally (not in Docker), you will need:
 * **Python 3.11+**
 * **Poetry** for dependency management.
 * **ffmpeg** installed on your system.
-* **Opus** (If on macOS: `brew install opus`).
+* **opus** (If on macOS: `brew install opus`).
 
 ---
 
@@ -38,10 +38,10 @@ If you are running this locally (not in Docker), you will need:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/Tortoise-Community/chilltoise-bot.git
+git clone https://github.com/Tortoise-Community/music-bot.git
 ```
 ```bash
-cd chilltoise-bot
+cd music-bot
 ```
 
 ### 2. Configure Environment Variables
@@ -71,16 +71,16 @@ poetry run python bot.py
 
 ```bash
 # Build the image
-docker build -t chilltoise-bot .
+docker build -t music-bot .
 ```
 ```bash
 # Run the container
 docker run -d \
-  --name chilltoise-bot \
+  --name music-bot \
   --restart unless-stopped \
   --env-file .env \
   -p 10000:10000 \
-  chilltoise-bot
+  music-bot
 
 ```
 
