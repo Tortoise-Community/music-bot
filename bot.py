@@ -7,6 +7,7 @@ TOKEN = config("DISCORD_TOKEN")
 class MusicBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.none()
+        intents.voice_states = True
         intents.guilds = True
 
         status_activity = discord.CustomActivity(

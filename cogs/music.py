@@ -107,13 +107,11 @@ class MusicCog(commands.Cog):
             await interaction.response.send_message("This command is restricted to the main server.", ephemeral=True)
             return
 
-        # Defer the interaction immediately so Discord doesn't timeout the 3-second limit
         await interaction.response.defer(thinking=True)
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self.fetch_files_blocking)
 
-        # Use followup.send() because we already deferred the initial response
         await interaction.followup.send(f"✅ Sync complete! Total tracks in local rotation: **{len(self.playlist)}**")
 
         vc = interaction.guild.voice_client
