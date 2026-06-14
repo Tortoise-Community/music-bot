@@ -15,7 +15,6 @@ def sync_music(api_key, list_id, download_dir="music"):
     list_url = f"https://pixeldrain.com/api/list/{list_id}"
     print(f"Fetching list data from: {list_url}")
 
-    # ADDED: Retry logic for the initial API fetch
     data = None
     max_retries = 3
     for attempt in range(max_retries):
@@ -23,7 +22,7 @@ def sync_music(api_key, list_id, download_dir="music"):
             response = requests.get(list_url, auth=auth, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
-            break  # Success, exit the retry loop
+            break
         except requests.exceptions.RequestException as e:
             print(f"⚠️ API Fetch attempt {attempt + 1}/{max_retries} failed: {e}")
             if attempt < max_retries - 1:

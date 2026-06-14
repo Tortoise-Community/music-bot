@@ -29,6 +29,7 @@ class MusicBot(commands.Bot):
         try:
             await self.load_extension("cogs.music")
             await self.load_extension("cogs.health")
+            await self.tree.sync()
         except Exception as e:
             print(f"Failed to load extension: {e}")
 
