@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: music-bot
+    env: docker
+    plan: free
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: PIXELDRAIN_API_KEY
+        sync: false
+      - key: PIXELDRAIN_ALBUM_ID
+        sync: false
