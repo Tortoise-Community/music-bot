@@ -13,7 +13,7 @@ It is specifically optimized to run on the **Render Free Tier** with a built-in 
 ## Features
 * **24/7 Continuous Playback:** Automatically loops through the local music directory.
 * **Pixeldrain Integration:** Syncs your music library directly from a Pixeldrain list.
-* **Smart Local Caching:** Downloads files locally to save bandwidth and prevent buffering.
+* **Local Caching:** Downloads files locally to save bandwidth and prevent buffering.
 * **Dockerized:** Ready to deploy anywhere with a clean, optimized Dockerfile.
 
 ---
@@ -29,12 +29,12 @@ It is specifically optimized to run on the **Render Free Tier** with a built-in 
 If you are running this locally (not in Docker), you will need:
 * **Python 3.11+**
 * **Poetry** for dependency management.
-* **FFmpeg** installed on your system.
-* **Opus Library** (If on macOS: `brew install opus`).
+* **ffmpeg** installed on your system.
+* **Opus** (If on macOS: `brew install opus`).
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the Repository
 ```bash
@@ -61,10 +61,10 @@ PIXELDRAIN_ALBUM_ID=your_pixeldrain_list_id
 ```bash
 # Install dependencies
 poetry install
-
+```
+```bash
 # Run the bot
 poetry run python bot.py
-
 ```
 
 ### 4. Run via Docker
@@ -72,10 +72,11 @@ poetry run python bot.py
 ```bash
 # Build the image
 docker build -t chilltoise-bot .
-
-# Run the container (Maps a local 'music_data' folder to the container's '/app/music')
+```
+```bash
+# Run the container
 docker run -d \
-  --name tortoise-bot \
+  --name chilltoise-bot \
   --restart unless-stopped \
   --env-file .env \
   -p 10000:10000 \
@@ -85,7 +86,7 @@ docker run -d \
 
 ---
 
-## 💬 Slash Commands
+## Slash Commands
 
 | Command | Description | Permissions |
 | --- | --- | --- |
@@ -95,6 +96,6 @@ docker run -d \
 
 ---
 
-## 📄 License
+## License
 
 This project is open-source and available under the [MIT License](https://www.google.com/search?q=LICENSE).
