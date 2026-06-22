@@ -27,18 +27,33 @@ class MusicCog(commands.Cog):
         if self.current_index >= len(self.playlist):
             self.current_index = 0
 
+    async def update_channel_status(self, song_name: str | None):
+        guild = self.bot.get_guild(self.guild_id)
+        if not guild:
+            return
+
+        channel = guild.get_channel(self.channel_id)
+        if isinstance(channel, discord.VoiceChannel):
+            try:
+                status_text = f"<:music:1518631999500320829> Now Playing: {song_name}" if song_name else "Some Mysterious Playlist"
+                await channel.edit(status=status_text)
+            except Exception as e:
+                print(f"⚠️ Failed to update voice channel status: {e}")
+
     def play_next(self, error=None):
         if error:
             print(f"Player error: {error}")
 
         guild = self.bot.get_guild(self.guild_id)
         if not guild or not guild.voice_client or not guild.voice_client.is_connected():
+            self.bot.loop.create_task(self.update_channel_status(None))
             return
 
         vc = guild.voice_client
 
         if not self.playlist:
             print("Playlist is empty. Add files and use /refresh.")
+            self.bot.loop.create_task(self.update_channel_status(None))
             return
 
         if self.current_index >= len(self.playlist):
@@ -55,8 +70,12 @@ class MusicCog(commands.Cog):
             vc.play(source, after=self.play_next)
             print(f"▶️ Playing local file: {song['name']}")
 
+            clean_name = song["name"].replace(".mp3", "")
+            self.bot.loop.create_task(self.update_channel_status(clean_name))
+
         except Exception as e:
             print(f"⚠️ Playback error for {song['name']}: {repr(e)}")
+            self.bot.loop.create_task(self.update_channel_status(None))
             self.bot.loop.call_later(2.0, self.play_next)
 
     async def startup_task(self):
@@ -117,19 +136,6 @@ class MusicCog(commands.Cog):
         vc = interaction.guild.voice_client
         if vc and not vc.is_playing() and self.playlist:
             self.play_next()
-
-    @app_commands.command(name="status", description="Displays the currently streaming song.")
-    async def status(self, interaction: discord.Interaction):
-        if interaction.guild_id != self.guild_id:
-            await interaction.response.send_message("This command is restricted to the main server.", ephemeral=True)
-            return
-
-        vc = interaction.guild.voice_client
-        if self.playlist and vc and vc.is_playing():
-            current_song = self.playlist[(self.current_index - 1) % len(self.playlist)]
-            await interaction.response.send_message(f"🎶 **Now Playing:** `{current_song['name']}`")
-        else:
-            await interaction.response.send_message("The player is currently idle.", ephemeral=True)
 
 
 async def setup(bot):
